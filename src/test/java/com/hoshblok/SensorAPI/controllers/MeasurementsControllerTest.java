@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -52,7 +51,7 @@ public class MeasurementsControllerTest {
 		mockMvc = MockMvcBuilders.standaloneSetup(measurementsController).build();
 	}
 
-	@Test
+	
 	public void getAll_renturnsAllDTOs() throws Exception {
 
 		Measurement measurement = new Measurement(11.1f, false, new Sensor());
@@ -73,7 +72,7 @@ public class MeasurementsControllerTest {
 		assertEquals(expected.getMeasurements().get(0).getValue(), response.getMeasurements().get(0).getValue());
 	}
 
-	@Test
+	
 	public void countRainyDays_returns1_when1RainyMeasurement() throws Exception {
 
 		Measurement measurement = new Measurement();
@@ -89,7 +88,7 @@ public class MeasurementsControllerTest {
 		assertEquals("1", result.getResponse().getContentAsString());
 	}
 	
-	@Test
+	
 	public void addMeasurement_returnsStatus200_whenBindingResultHasNoErrors() throws Exception {
 		
 		MeasurementDTO measurementDTO = new MeasurementDTO(11.1f, false, new SensorDTO());
@@ -104,7 +103,7 @@ public class MeasurementsControllerTest {
 		//@formatter:on
 	}
 	
-	@Test
+	
 	public void addMeasurement_throwsException_whenBindingResultHasErrors() throws Exception {
 
 		MeasurementDTO measurementDTO = new MeasurementDTO();

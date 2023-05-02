@@ -1,30 +1,26 @@
 package com.hoshblok.SensorAPI.models;
 
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Entity
-@Table(name = "sensors")
-public class Sensor {
+@Table(name = "people")
+public class Person {
 
 	@Id
 	@Column(name = "id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 
-	@NotEmpty(message = "Sensor username should not be empty!")
-	@Size(min = 3, max = 30, message = "Sensor username should be between 3 and 30 symbols!")
 	@Column(name = "username")
+	@NotNull(message = "Username should not be null!")
+	@Size(min = 3, max = 30, message = "Username should be between 3 and 30 characters!")
 	private String username;
 
 	@Column(name = "password")
@@ -34,23 +30,12 @@ public class Sensor {
 	@Column(name = "role")
 	private String role;
 
-	@OneToMany(mappedBy = "sensor")
-	private List<Measurement> measurement;
-
 	public int getId() {
 		return id;
 	}
 
 	public void setId(int id) {
 		this.id = id;
-	}
-
-	public List<Measurement> getMeasurement() {
-		return measurement;
-	}
-
-	public void setMeasurement(List<Measurement> measurement) {
-		this.measurement = measurement;
 	}
 
 	public String getUsername() {
@@ -76,4 +61,5 @@ public class Sensor {
 	public void setRole(String role) {
 		this.role = role;
 	}
+
 }

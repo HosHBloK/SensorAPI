@@ -1,22 +1,20 @@
 package com.hoshblok.SensorAPI.dto;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-public class SensorDTO {
+public class AuthenticationDTO {
 
-	@NotEmpty(message = "Sensor username should not be empty!")
-	@Size(min = 3, max = 30, message = "Sensor username should be between 3 and 30 symbols!")
+	@NotNull(message = "Username should not be null!")
+	@Size(min = 3, max = 30, message = "Username should be between 3 and 30 characters!")
 	private String username;
 
 	@NotNull(message = "Password should not be null!")
 	private String password;
 	
-	@Override
-	public String toString() {
-		return "SensorDTO [username=" + username + "]";
-	}
+	@NotNull(message = "Role should not be null!")
+	@Size(min = 4, max = 6, message = "Role should be between 4 and 6 characters!")
+	private String role;
 
 	public String getUsername() {
 		return username;
@@ -33,4 +31,13 @@ public class SensorDTO {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
+	}
+
 }

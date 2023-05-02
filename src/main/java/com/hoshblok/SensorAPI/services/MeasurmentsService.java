@@ -25,7 +25,12 @@ public class MeasurmentsService {
 	}
 
 	public List<Measurement> findAll() {
+
 		return measuremntsRepository.findAll();
+	}
+
+	public List<Measurement> findAll(String sensorUsername) {
+		return measuremntsRepository.findBySensorName(sensorUsername);
 	}
 
 	@Transactional
@@ -35,7 +40,7 @@ public class MeasurmentsService {
 	}
 
 	private void enrichMeasurement(Measurement measurement) {
-		measurement.setSensor(sensorsService.findOne(measurement.getSensor().getName()));
+		measurement.setSensor(sensorsService.findOne(measurement.getSensor().getUsername()));
 		measurement.setTimestamp(LocalDateTime.now());
 	}
 }

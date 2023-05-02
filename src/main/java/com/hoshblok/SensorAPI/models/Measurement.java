@@ -41,6 +41,9 @@ public class Measurement {
 	@Column(name = "timestamp")
 	private LocalDateTime timestamp;
 	
+	@Column(name = "sensor_name")
+	private String sensorName;
+	
 	public Measurement(Float value, Boolean raining, Sensor sensor) {
 		this.value = value;
 		this.raining = raining;
@@ -87,5 +90,17 @@ public class Measurement {
 
 	public void setTimestamp(LocalDateTime timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public String getSensorName() {
+		return sensorName;
+	}
+
+	public void setSensorName(String sensorName) {
+		this.sensorName = sensorName;
+	}
+
+	public Boolean getRaining() {
+		return raining;
 	}
 }

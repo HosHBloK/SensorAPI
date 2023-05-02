@@ -30,6 +30,6 @@ public class SensorsService {
 	}
 
 	public Sensor findOne(String name) {
-		return sensorsRepository.findByName(name).orElse(null);
+		return sensorsRepository.findByUsername(name).orElse(null);
 	}
 }

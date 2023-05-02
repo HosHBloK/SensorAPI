@@ -25,8 +25,8 @@ public class MeasurementDTOValidator implements Validator{
 	public void validate(Object target, Errors errors) {
 		MeasurementDTO measurementDTO = (MeasurementDTO) target;
 		
-		if (!sensorsRepository.findByName(measurementDTO.getSensor().getName()).isPresent()) {
-			errors.rejectValue("sensor", "", "Such sensor is not registered!");
+		if (!sensorsRepository.findByUsername(measurementDTO.getSensorName()).isPresent()) {
+			errors.rejectValue("sensorName", "", "Such sensor is not registered!");
 		}
 	}
 }
