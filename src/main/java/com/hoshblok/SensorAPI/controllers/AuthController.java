@@ -2,7 +2,6 @@ package com.hoshblok.SensorAPI.controllers;
 
 import javax.validation.Valid;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +24,10 @@ import com.hoshblok.SensorAPI.exceptions.NotValidSensorException;
 import com.hoshblok.SensorAPI.models.Person;
 import com.hoshblok.SensorAPI.models.Sensor;
 import com.hoshblok.SensorAPI.security.JWTUtil;
+import com.hoshblok.SensorAPI.services.PeopleService;
 import com.hoshblok.SensorAPI.services.PersonRegistrationService;
 import com.hoshblok.SensorAPI.services.SensorRegistrationService;
+import com.hoshblok.SensorAPI.services.SensorsService;
 import com.hoshblok.SensorAPI.util.AuthResponse;
 import com.hoshblok.SensorAPI.util.ErrorMessage;
 import com.hoshblok.SensorAPI.util.ErrorResponse;
@@ -42,7 +43,8 @@ public class AuthController {
 	private final PersonValidator personValidator;
 	private final PersonRegistrationService personRegistrationService;
 	private final JWTUtil jwtUtil;
-	private final ModelMapper modelMapper;
+	private final PeopleService peopleService;
+	private final SensorsService sensorsService;
 	private final AuthenticationManager authenticationManager;
 	private final SensorRegistrationService sensorRegistrationService;
 	private final SensorDTOValidator sensorDTOValidator;
@@ -50,13 +52,14 @@ public class AuthController {
 
 	@Autowired
 	public AuthController(PersonValidator personValidator, PersonRegistrationService personRegistrationService,
-		JWTUtil jwtUtil, ModelMapper modelMapper, AuthenticationManager authenticationManager,
+		JWTUtil jwtUtil, AuthenticationManager authenticationManager,
 		SensorRegistrationService sensorRegistrationService, SensorDTOValidator sensorDTOValidator,
-		AuthenticationDTOValidator authenticationDTOValidator) {
+		AuthenticationDTOValidator authenticationDTOValidator, PeopleService peopleService, SensorsService sensorsService) {
 		this.personValidator = personValidator;
 		this.personRegistrationService = personRegistrationService;
 		this.jwtUtil = jwtUtil;
-		this.modelMapper = modelMapper;
+		this.peopleService = peopleService;
+		this.sensorsService = sensorsService;
 		this.authenticationManager = authenticationManager;
 		this.sensorRegistrationService = sensorRegistrationService;
 		this.sensorDTOValidator = sensorDTOValidator;
@@ -87,10 +90,10 @@ public class AuthController {
 	}
 
 	@PostMapping("/registration/sensor")
-	public ResponseEntity<AuthResponse> performRegistration(@RequestBody @Valid SensorDTO sensorDTO,
+	public ResponseEntity<AuthResponse> performSensorRegistration(@RequestBody @Valid SensorDTO sensorDTO,
 		BindingResult bindingResult) {
 
-		Sensor sensor = convertToSensor(sensorDTO);
+		Sensor sensor = sensorsService.convertToSensor(sensorDTO);
 
 		sensorDTOValidator.validate(sensor, bindingResult);
 
@@ -111,7 +114,7 @@ public class AuthController {
 	public ResponseEntity<AuthResponse> performRegistration(@RequestBody @Valid PersonDTO personDTO,
 		BindingResult bindingResult) {
 
-		Person person = convertToPerson(personDTO);
+		Person person = peopleService.convertToPerson(personDTO);
 
 		personValidator.validate(person, bindingResult);
 
@@ -125,15 +128,6 @@ public class AuthController {
 		AuthResponse response = new AuthResponse(token);
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
-	private Person convertToPerson(PersonDTO personDTO) {
-		return modelMapper.map(personDTO, Person.class);
-	}
-
-	private Sensor convertToSensor(SensorDTO sensorDTO) {
-
-		return modelMapper.map(sensorDTO, Sensor.class);
 	}
 
 	@ExceptionHandler
