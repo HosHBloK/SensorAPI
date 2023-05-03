@@ -8,7 +8,7 @@ import javax.validation.constraints.Pattern;
 public class MeasurementDTO {
 
 	@NotNull(message = "Value should not be empty")
-	@Pattern(regexp = "^\\d+$", message = "Field 'value' must contain only numbers")
+	@Pattern(regexp = "^\\d*\\.?\\d+$", message = "Field 'value' must contain only numbers")
 	@Min(value = -100, message = "Value should be above -100!")
 	@Max(value = 100, message = "Value should be under 100!")
 	private String value;

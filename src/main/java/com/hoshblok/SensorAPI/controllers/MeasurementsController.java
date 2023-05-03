@@ -4,7 +4,6 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +19,6 @@ import com.hoshblok.SensorAPI.exceptions.NotValidMeasurementException;
 import com.hoshblok.SensorAPI.exceptions.SensorNotFoundException;
 import com.hoshblok.SensorAPI.models.Measurement;
 import com.hoshblok.SensorAPI.services.MeasurmentsService;
-import com.hoshblok.SensorAPI.services.SensorsService;
 import com.hoshblok.SensorAPI.util.ErrorMessage;
 import com.hoshblok.SensorAPI.util.ErrorResponse;
 import com.hoshblok.SensorAPI.util.MeasurementRequest;
@@ -33,17 +31,13 @@ import com.hoshblok.SensorAPI.validators.MeasurementRequestValidator;
 public class MeasurementsController {
 
 	private final MeasurmentsService measurmentsService;
-	private final SensorsService sensorsService;
-	private final ModelMapper modelMapper;
 	private final MeasurementDTOValidator measurementDTOValidator;
 	private final MeasurementRequestValidator measurementRequestValidator;
 
 	@Autowired
-	public MeasurementsController(MeasurmentsService measurmentsService, ModelMapper modelMapper,
-		MeasurementDTOValidator measurementDTOValidator, MeasurementRequestValidator measurementRequestValidator, SensorsService sensorsService) {
+	public MeasurementsController(MeasurmentsService measurmentsService,
+		MeasurementDTOValidator measurementDTOValidator, MeasurementRequestValidator measurementRequestValidator) {
 		this.measurmentsService = measurmentsService;
-		this.sensorsService = sensorsService;
-		this.modelMapper = modelMapper;
 		this.measurementDTOValidator = measurementDTOValidator;
 		this.measurementRequestValidator = measurementRequestValidator;
 	}
@@ -59,7 +53,7 @@ public class MeasurementsController {
 		}
 
 		return new MeasurementResponse(measurmentsService.findAll(measurementRequest.getUsername()).stream().map(
-			this::convertToMeasurementDTO).collect(Collectors.toList()));
+			measurmentsService::convertToMeasurementDTO).collect(Collectors.toList()));
 
 	}
 
@@ -73,7 +67,8 @@ public class MeasurementsController {
 			throw new SensorNotFoundException(ErrorMessage.getErrorMessage(bindingResult));
 		}
 
-		return measurmentsService.findAll(measurementRequest.getUsername()).stream().filter(Measurement::isRaining).count();
+		return measurmentsService.findAll(measurementRequest.getUsername()).stream().filter(Measurement::isRaining)
+			.count();
 	}
 
 	@PostMapping("/add")
@@ -86,21 +81,9 @@ public class MeasurementsController {
 			throw new NotValidMeasurementException(ErrorMessage.getErrorMessage(bindingResult));
 		}
 
-		measurmentsService.save(convertToMeasurement(measurementDTO));
-		
+		measurmentsService.save(measurmentsService.convertToMeasurement(measurementDTO));
+
 		return ResponseEntity.ok(HttpStatus.OK);
-	}
-
-	private MeasurementDTO convertToMeasurementDTO(Measurement measurement) {
-
-		MeasurementDTO measurementDTO = modelMapper.map(measurement, MeasurementDTO.class);
-		return measurementDTO;
-	}
-
-	private Measurement convertToMeasurement(MeasurementDTO measurementDTO) {
-		Measurement measurement = modelMapper.map(measurementDTO, Measurement.class);
-		measurement.setSensor(sensorsService.findOne(measurement.getSensorName()));
-		return measurement;
 	}
 
 	@ExceptionHandler
@@ -109,10 +92,10 @@ public class MeasurementsController {
 		ErrorResponse response = new ErrorResponse(ex.getMessage(), System.currentTimeMillis());
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
-	
+
 	@ExceptionHandler
 	private ResponseEntity<ErrorResponse> handleCreateException(SensorNotFoundException ex) {
-		
+
 		ErrorResponse response = new ErrorResponse(ex.getMessage(), System.currentTimeMillis());
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
