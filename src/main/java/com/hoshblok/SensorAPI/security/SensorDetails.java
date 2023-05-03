@@ -41,7 +41,7 @@ public class SensorDetails implements UserDetails {
 
 	@Override
 	public boolean isAccountNonLocked() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -52,6 +52,10 @@ public class SensorDetails implements UserDetails {
 	@Override
 	public boolean isEnabled() {
 		return true;
+	}
+
+	public Sensor getSensor() {
+		return sensor;
 	}
 
 }

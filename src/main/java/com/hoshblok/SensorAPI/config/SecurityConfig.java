@@ -37,8 +37,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		//@formatter:off
 		http.csrf().disable()
 		.authorizeRequests()
-		.antMatchers("/auth/login", "/auth/registration/sensor", "/auth/registration/person").permitAll()
-		.anyRequest().hasAnyRole("USER", "SENSOR")
+		.antMatchers("/auth/refresh_token", "/auth/registration/sensor", "/auth/registration/person").permitAll()
+		.antMatchers("/measurements/add").hasRole("SENSOR")
+		.antMatchers("/measurements/get", "/measurements/rainy_days_count").hasRole("PERSON")
+		.anyRequest().hasAnyRole("PERSON", "SENSOR")
 		.and()
 		.sessionManagement()
 		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);

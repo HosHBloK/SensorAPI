@@ -3,21 +3,24 @@ package com.hoshblok.SensorAPI.dto;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 public class MeasurementDTO {
 
 	@NotNull(message = "Value should not be empty")
+	@Pattern(regexp = "^\\d+$", message = "Field 'value' must contain only numbers")
 	@Min(value = -100, message = "Value should be above -100!")
 	@Max(value = 100, message = "Value should be under 100!")
-	private Float value;
+	private String value;
 
 	@NotNull(message = "Raining should not be empty")
-	private Boolean raining;
+	@Pattern(regexp = "^(true|false)$", message = "Field 'value' must be either 'true' or 'false'")
+	private String raining;
 
-	@NotNull(message = "Sensor should not be empty")
+	@NotNull(message = "Sensor username should not be empty")
 	private String sensorName;
 
-	public MeasurementDTO(Float value, Boolean raining, String sensorName) {
+	public MeasurementDTO(String value, String raining, String sensorName) {
 		this.value = value;
 		this.raining = raining;
 		this.sensorName = sensorName;
@@ -26,19 +29,15 @@ public class MeasurementDTO {
 	public MeasurementDTO() {
 	}
 
-	public Float getValue() {
+	public String getValue() {
 		return value;
 	}
 
-	public void setValue(Float value) {
+	public void setValue(String value) {
 		this.value = value;
 	}
 
-	public Boolean isRaining() {
-		return raining;
-	}
-
-	public void setRaining(Boolean raining) {
+	public void setRaining(String raining) {
 		this.raining = raining;
 	}
 
@@ -48,5 +47,9 @@ public class MeasurementDTO {
 
 	public void setSensorName(String sensorName) {
 		this.sensorName = sensorName;
+	}
+
+	public String getRaining() {
+		return raining;
 	}
 }

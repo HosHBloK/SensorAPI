@@ -12,11 +12,6 @@ public class SensorDTO {
 
 	@NotNull(message = "Password should not be null!")
 	private String password;
-	
-	@Override
-	public String toString() {
-		return "SensorDTO [username=" + username + "]";
-	}
 
 	public String getUsername() {
 		return username;
