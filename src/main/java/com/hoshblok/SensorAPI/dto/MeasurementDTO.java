@@ -18,12 +18,12 @@ public class MeasurementDTO {
 	private String raining;
 
 	@NotNull(message = "Sensor username should not be empty")
-	private String sensorName;
+	private String username;
 
-	public MeasurementDTO(String value, String raining, String sensorName) {
+	public MeasurementDTO(String value, String raining, String username) {
 		this.value = value;
 		this.raining = raining;
-		this.sensorName = sensorName;
+		this.username = username;
 	}
 
 	public MeasurementDTO() {
@@ -41,12 +41,12 @@ public class MeasurementDTO {
 		this.raining = raining;
 	}
 
-	public String getSensorName() {
-		return sensorName;
+	public String getUsername() {
+		return username;
 	}
 
-	public void setSensorName(String sensorName) {
-		this.sensorName = sensorName;
+	public void setUsername(String username) {
+		this.username = username;
 	}
 
 	public String getRaining() {

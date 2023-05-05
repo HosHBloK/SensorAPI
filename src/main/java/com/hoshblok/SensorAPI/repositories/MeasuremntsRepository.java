@@ -10,5 +10,5 @@ import com.hoshblok.SensorAPI.models.Measurement;
 @Repository
 public interface MeasuremntsRepository extends JpaRepository<Measurement, Integer> {
 
-	List<Measurement> findBySensorName(String sensor_username);
+	List<Measurement> findByUsername(String sensor_username);
 }

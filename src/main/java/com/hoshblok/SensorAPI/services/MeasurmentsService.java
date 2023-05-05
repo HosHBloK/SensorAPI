@@ -34,7 +34,7 @@ public class MeasurmentsService {
 	}
 
 	public List<Measurement> findAll(String sensorUsername) {
-		return measuremntsRepository.findBySensorName(sensorUsername);
+		return measuremntsRepository.findByUsername(sensorUsername);
 	}
 
 	@Transactional
@@ -56,7 +56,7 @@ public class MeasurmentsService {
 
 	public Measurement convertToMeasurement(MeasurementDTO measurementDTO) {
 		Measurement measurement = modelMapper.map(measurementDTO, Measurement.class);
-		measurement.setSensor(sensorsService.findOne(measurement.getSensorName()));
+		measurement.setSensor(sensorsService.findOne(measurement.getUsername()));
 		return measurement;
 	}
 }

@@ -40,17 +40,18 @@ public class Measurement {
 
 	@Column(name = "timestamp")
 	private LocalDateTime timestamp;
-	
+
 	@Column(name = "sensor_name")
-	private String sensorName;
-	
+	private String username;
+
 	public Measurement(Float value, Boolean raining, Sensor sensor) {
 		this.value = value;
 		this.raining = raining;
 		this.sensor = sensor;
 	}
-	
-	public Measurement() {}
+
+	public Measurement() {
+	}
 
 	public int getId() {
 		return id;
@@ -92,15 +93,15 @@ public class Measurement {
 		this.timestamp = timestamp;
 	}
 
-	public String getSensorName() {
-		return sensorName;
-	}
-
-	public void setSensorName(String sensorName) {
-		this.sensorName = sensorName;
-	}
-
 	public Boolean getRaining() {
 		return raining;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
 	}
 }

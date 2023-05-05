@@ -35,7 +35,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		//@formatter:off
-		http.csrf().disable()
+		http
+		.csrf().disable()
 		.authorizeRequests()
 		.antMatchers("/auth/refresh_token", "/auth/registration/sensor", "/auth/registration/person").permitAll()
 		.antMatchers("/measurements/add").hasRole("SENSOR")
@@ -64,5 +65,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	public AuthenticationManager authenticationManagerBean() throws Exception {
 		return super.authenticationManagerBean();
 	}
-
 }
