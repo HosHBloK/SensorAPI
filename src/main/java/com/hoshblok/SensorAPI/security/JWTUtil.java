@@ -55,5 +55,4 @@ public class JWTUtil {
 		//@formatter:on
 		return verifier.verify(token);
 	}
-
 }

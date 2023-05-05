@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,35 +40,39 @@ public class JWTFilter extends OncePerRequestFilter {
 		FilterChain filterChain) throws ServletException, IOException {
 		String authHeader = httpServletRequest.getHeader("Authorization");
 
-		if (authHeader != null && !authHeader.isBlank() && authHeader.startsWith("Bearer ")) {
-			String jwt = authHeader.substring(7);
+		if (authHeader == null || authHeader.isBlank() || !authHeader.startsWith("Bearer ")) {
 
-			if (jwt.isBlank()) {
-				httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JWT Token in Bearer Header");
-			} else {
-				try {
-					String username = jwtUtil.retrieveClaim(jwt).get("username");
-					String role = jwtUtil.retrieveClaim(jwt).get("role");
-					UserDetails userDetails;
-
-					if (role.equals("ROLE_SENSOR") || role.equalsIgnoreCase("sensor")) {
-						userDetails = sensorDetailsService.loadUserByUsername(username);
-					} else {
-						userDetails = personDetailsService.loadUserByUsername(username);
-					}
-
-					UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
-						userDetails.getPassword(), userDetails.getAuthorities());
-
-					if (SecurityContextHolder.getContext().getAuthentication() == null) {
-						SecurityContextHolder.getContext().setAuthentication(authToken);
-					}
-				} catch (JWTVerificationException exc) {
-					httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JWT Token");
-				}
-			}
+			httpServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
+			httpServletResponse.getWriter().write("Invalid JWT token!");
+			return;
 		}
 
-		filterChain.doFilter(httpServletRequest, httpServletResponse);
+		String jwt = authHeader.substring(7);
+
+		try {
+			String username = jwtUtil.retrieveClaim(jwt).get("username");
+			String role = jwtUtil.retrieveClaim(jwt).get("role");
+			UserDetails userDetails;
+
+			if (role.equals("ROLE_SENSOR") || role.equalsIgnoreCase("sensor")) {
+				userDetails = sensorDetailsService.loadUserByUsername(username);
+			} else {
+				userDetails = personDetailsService.loadUserByUsername(username);
+			}
+
+			UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
+				userDetails.getPassword(), userDetails.getAuthorities());
+
+			if (SecurityContextHolder.getContext().getAuthentication() == null) {
+				SecurityContextHolder.getContext().setAuthentication(authToken);
+			}
+
+			filterChain.doFilter(httpServletRequest, httpServletResponse);
+
+		} catch (JWTVerificationException ex) {
+
+			httpServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
+			httpServletResponse.getWriter().write("Invalid JWT token!");
+		}
 	}
 }
