@@ -41,15 +41,12 @@ public class JWTFilter extends OncePerRequestFilter {
 		String authHeader = httpServletRequest.getHeader("Authorization");
 
 		if (authHeader == null || authHeader.isBlank() || !authHeader.startsWith("Bearer ")) {
-
-			httpServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-			httpServletResponse.getWriter().write("Invalid JWT token!");
+			filterChain.doFilter(httpServletRequest, httpServletResponse);
 			return;
 		}
 
-		String jwt = authHeader.substring(7);
-
 		try {
+			String jwt = authHeader.substring(7);
 			String username = jwtUtil.retrieveClaim(jwt).get("username");
 			String role = jwtUtil.retrieveClaim(jwt).get("role");
 			UserDetails userDetails;
@@ -70,7 +67,6 @@ public class JWTFilter extends OncePerRequestFilter {
 			filterChain.doFilter(httpServletRequest, httpServletResponse);
 
 		} catch (JWTVerificationException ex) {
-
 			httpServletResponse.setStatus(HttpStatus.BAD_REQUEST.value());
 			httpServletResponse.getWriter().write("Invalid JWT token!");
 		}
