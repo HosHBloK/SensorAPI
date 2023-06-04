@@ -2,7 +2,6 @@ package com.hoshblok.SensorAPI.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,22 +22,23 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.BindingResult;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hoshblok.SensorAPI.dto.MeasurementDTO;
-import com.hoshblok.SensorAPI.models.Measurement;
-import com.hoshblok.SensorAPI.models.Sensor;
-import com.hoshblok.SensorAPI.services.MeasurmentsService;
-import com.hoshblok.SensorAPI.services.SensorsService;
-import com.hoshblok.SensorAPI.util.MeasurementRequest;
-import com.hoshblok.SensorAPI.util.MeasurementResponse;
-import com.hoshblok.SensorAPI.validators.MeasurementDTOValidator;
-import com.hoshblok.SensorAPI.validators.MeasurementRequestValidator;
+import com.hoshblok.SensorAPI.dto.measurement.request.AddMeasurementRequest;
+import com.hoshblok.SensorAPI.dto.measurement.request.GetMeasurementRequest;
+import com.hoshblok.SensorAPI.dto.measurement.response.MeasurementResponse;
+import com.hoshblok.SensorAPI.dto.measurement.response.RainyDaysResponse;
+import com.hoshblok.SensorAPI.errors.GlobalExceptionsHandler;
+import com.hoshblok.SensorAPI.services.interfaces.MeasurementsService;
+import com.hoshblok.SensorAPI.services.interfaces.SensorsService;
+import com.hoshblok.SensorAPI.validators.AddMeasurementRequestValidator;
+import com.hoshblok.SensorAPI.validators.GetMeasurementRequestValidator;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasurementsControllerTest {
 
 	@Mock
-	private MeasurmentsService measurmentsService;
+	private MeasurementsService measurmentsService;
 	@Mock
 	private ModelMapper modelMapper;
 	@Mock
@@ -46,9 +46,9 @@ public class MeasurementsControllerTest {
 	@Mock
 	private SensorsService sensorsService;
 	@Mock
-	private MeasurementRequestValidator measurementRequestValidator;
+	private AddMeasurementRequestValidator addMeasurementRequestValidator;
 	@Mock
-	private MeasurementDTOValidator measurementDTOValidator;
+	private GetMeasurementRequestValidator getMeasurementRequestValidator;
 
 	@InjectMocks
 	private MeasurementsController measurementsController;
@@ -57,23 +57,21 @@ public class MeasurementsControllerTest {
 
 	@BeforeEach
 	private void setup() {
-		mockMvc = MockMvcBuilders.standaloneSetup(measurementsController).build();
+		mockMvc = MockMvcBuilders.standaloneSetup(measurementsController).setControllerAdvice(
+			GlobalExceptionsHandler.class).build();
 	}
 
 	@Test
 	public void getMeasurementsOfSensor_renturnsMeasurementResponse_whenBindingResultHasNoErrors() throws Exception {
 
-		MeasurementRequest measurementRequest = new MeasurementRequest();
-		measurementRequest.setUsername("abc");
+		GetMeasurementRequest getMeasurementRequest = new GetMeasurementRequest();
+		getMeasurementRequest.setUsername("abc");
 
-		String json = new ObjectMapper().writeValueAsString(measurementRequest);
+		String json = new ObjectMapper().writeValueAsString(getMeasurementRequest);
 
-		Measurement measurement = new Measurement(11.1f, false, new Sensor());
-		MeasurementDTO measurementDTO = new MeasurementDTO("11.1", "false", "null");
-		MeasurementResponse expected = new MeasurementResponse(List.of(measurementDTO));
+		MeasurementResponse expectedResponse = new MeasurementResponse("11.1", "false", "abc");
 
-		Mockito.when(measurmentsService.findAll(anyString())).thenReturn(List.of(measurement));
-		Mockito.when(measurmentsService.convertToMeasurementDTO(any(Measurement.class))).thenReturn(measurementDTO);
+		Mockito.when(measurmentsService.getMeasurements(any())).thenReturn(List.of(expectedResponse));
 
 		//@formatter:off 
 		 MvcResult result = mockMvc.perform(post("/measurements/get")
@@ -84,16 +82,18 @@ public class MeasurementsControllerTest {
 		 //@formatter:on
 
 		String responseBody = result.getResponse().getContentAsString();
-		MeasurementResponse response = new ObjectMapper().readValue(responseBody, MeasurementResponse.class);
-		assertEquals(expected.getMeasurements().get(0).getValue(), response.getMeasurements().get(0).getValue());
+		List<MeasurementResponse> actualResponse = new ObjectMapper().readValue(responseBody,
+			new TypeReference<List<MeasurementResponse>>() {
+			});
+		assertEquals(List.of(expectedResponse).get(0).toString(), actualResponse.get(0).toString());
 	}
 
 	@Test
 	public void getMeasurementsOfSensor_throwsException_whenBindingResultHasErrors() throws Exception {
 
-		MeasurementRequest measurementRequest = new MeasurementRequest();
+		GetMeasurementRequest getMeasurementRequest = new GetMeasurementRequest();
 
-		String json = new ObjectMapper().writeValueAsString(measurementRequest);
+		String json = new ObjectMapper().writeValueAsString(getMeasurementRequest);
 
 		//@formatter:off 
 		mockMvc.perform(post("/measurements/get")
@@ -103,20 +103,19 @@ public class MeasurementsControllerTest {
 		.andExpect(jsonPath("$.message").exists())
 		.andExpect(jsonPath("$.timestamp").exists());
 		//@formatter:on
-
 	}
 
 	@Test
 	public void countRainyDaysOfSensor_returns1_when1RainyMeasurementAndBindingResultHasNoErrors() throws Exception {
-		
-		MeasurementRequest measurementRequest = new MeasurementRequest();
-		measurementRequest.setUsername("abc");
 
-		String json = new ObjectMapper().writeValueAsString(measurementRequest);
+		GetMeasurementRequest getMeasurementRequest = new GetMeasurementRequest();
+		getMeasurementRequest.setUsername("abc");
 
-		Measurement measurement = new Measurement();
-		measurement.setRaining(true);
-		Mockito.when(measurmentsService.findAll(anyString())).thenReturn(List.of(measurement));
+		String json = new ObjectMapper().writeValueAsString(getMeasurementRequest);
+
+		RainyDaysResponse expectedResponse = new RainyDaysResponse(1);
+
+		Mockito.when(measurmentsService.getRainyDaysCount(any())).thenReturn(expectedResponse);
 
 		//@formatter:off 
 		 MvcResult result = mockMvc.perform(post("/measurements/rainy_days_count")
@@ -126,16 +125,18 @@ public class MeasurementsControllerTest {
         .andReturn();
 		 //@formatter:on
 
-		assertEquals("1", result.getResponse().getContentAsString());
+		String responseBody = result.getResponse().getContentAsString();
+		RainyDaysResponse Actualresponse = new ObjectMapper().readValue(responseBody, RainyDaysResponse.class);
+		assertEquals(expectedResponse.getRainy_days_count(), Actualresponse.getRainy_days_count());
 	}
-	
+
 	@Test
 	public void countRainyDaysOfSensor_throwsException_whenBindingResultHasErrors() throws Exception {
-		
-		MeasurementRequest measurementRequest = new MeasurementRequest();
-		
-		String json = new ObjectMapper().writeValueAsString(measurementRequest);
-		
+
+		GetMeasurementRequest getMeasurementRequest = new GetMeasurementRequest();
+
+		String json = new ObjectMapper().writeValueAsString(getMeasurementRequest);
+
 		//@formatter:off 
 		mockMvc.perform(post("/measurements/rainy_days_count")
 		.contentType(MediaType.APPLICATION_JSON)
@@ -149,12 +150,10 @@ public class MeasurementsControllerTest {
 	@Test
 	public void addMeasurement_returnsStatus200_whenBindingResultHasNoErrors() throws Exception {
 
-		MeasurementDTO measurementDTO = new MeasurementDTO("11.1", "false", "abc");
-		
-		String json = new ObjectMapper().writeValueAsString(measurementDTO);
-		
-		Mockito.when(measurmentsService.convertToMeasurement(any(MeasurementDTO.class))).thenReturn(new Measurement());
-	
+		AddMeasurementRequest addMeasurementRequest = new AddMeasurementRequest("11.1", "false", "abc");
+
+		String json = new ObjectMapper().writeValueAsString(addMeasurementRequest);
+
 		//@formatter:off 
 		mockMvc.perform(post("/measurements/add")
 		.contentType(MediaType.APPLICATION_JSON)
@@ -167,8 +166,9 @@ public class MeasurementsControllerTest {
 	@Test
 	public void addMeasurement_throwsException_whenBindingResultHasErrors() throws Exception {
 
-		MeasurementDTO measurementDTO = new MeasurementDTO();
-		String json = new ObjectMapper().writeValueAsString(measurementDTO);
+		AddMeasurementRequest addMeasurementRequest = new AddMeasurementRequest();
+
+		String json = new ObjectMapper().writeValueAsString(addMeasurementRequest);
 
 		//@formatter:off 
 		mockMvc.perform(post("/measurements/add")

@@ -12,6 +12,8 @@ import com.hoshblok.SensorAPI.models.Sensor;
 
 public class SensorDetails implements UserDetails {
 
+	private static final long serialVersionUID = -6936831131644904329L;
+	
 	private final Sensor sensor;
 
 	@Autowired
@@ -57,5 +59,4 @@ public class SensorDetails implements UserDetails {
 	public Sensor getSensor() {
 		return sensor;
 	}
-
 }

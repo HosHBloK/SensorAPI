@@ -2,9 +2,9 @@ package com.hoshblok.SensorAPI.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -13,23 +13,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.hoshblok.SensorAPI.services.PersonDetailsService;
-import com.hoshblok.SensorAPI.services.SensorDetailsService;
+import com.hoshblok.SensorAPI.errors.ExceptionsHandlerFilter;
+import com.hoshblok.SensorAPI.security.CustomAuthenticationProvider;
 
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-	private final PersonDetailsService personDetailsService;
-	private final SensorDetailsService sensorDetailsService;
+	private final CustomAuthenticationProvider authenticationProvider;
 	private final JWTFilter jwtFilter;
+	private final ExceptionsHandlerFilter exFilter;
 
 	@Autowired
-	public SecurityConfig(PersonDetailsService personDetailsService, JWTFilter jwtFilter,
-		SensorDetailsService sensorDetailsService) {
-		this.personDetailsService = personDetailsService;
-		this.sensorDetailsService = sensorDetailsService;
+	public SecurityConfig(JWTFilter jwtFilter, ExceptionsHandlerFilter exFilter, @Lazy CustomAuthenticationProvider authenticationProvider) {
+		this.authenticationProvider = authenticationProvider;
 		this.jwtFilter = jwtFilter;
+		this.exFilter = exFilter;
 	}
 
 	@Override
@@ -37,8 +35,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		//@formatter:off
 		http
 		.csrf().disable()
-		.authorizeRequests()
-		.antMatchers("/auth/refresh_token", "/auth/registration/sensor", "/auth/registration/person").permitAll()
+		.authorizeHttpRequests()
+		.antMatchers("/auth/login", "/auth/registration/**", "/auth/refresh_tokens").permitAll()
 		.antMatchers("/measurements/add").hasRole("SENSOR")
 		.antMatchers("/measurements/get", "/measurements/rainy_days_count").hasRole("PERSON")
 		.anyRequest().hasAnyRole("PERSON", "SENSOR")
@@ -47,13 +45,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 		//@formatter:on
 
+		http.addFilterBefore(exFilter, UsernamePasswordAuthenticationFilter.class);
 		http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 	}
 
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.userDetailsService(personDetailsService).and().userDetailsService(sensorDetailsService).passwordEncoder(
-			getPasswordEncoder());
+		 auth.authenticationProvider(authenticationProvider);
 	}
 
 	@Bean

@@ -1,160 +1,119 @@
 package com.hoshblok.SensorAPI.controllers;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hoshblok.SensorAPI.dto.AuthenticationDTO;
-import com.hoshblok.SensorAPI.dto.PersonDTO;
-import com.hoshblok.SensorAPI.dto.SensorDTO;
-import com.hoshblok.SensorAPI.exceptions.NotValidAuthenticationDTOException;
+import com.hoshblok.SensorAPI.dto.auth.request.LoginRequest;
+import com.hoshblok.SensorAPI.dto.auth.response.AuthResponse;
+import com.hoshblok.SensorAPI.dto.person.request.PersonRegistrationRequest;
+import com.hoshblok.SensorAPI.dto.sensor.request.SensorRegistrationRequest;
+import com.hoshblok.SensorAPI.errors.ErrorMessage;
+import com.hoshblok.SensorAPI.exceptions.NotValidAuthenticationException;
 import com.hoshblok.SensorAPI.exceptions.NotValidPersonException;
 import com.hoshblok.SensorAPI.exceptions.NotValidSensorException;
-import com.hoshblok.SensorAPI.models.Person;
-import com.hoshblok.SensorAPI.models.Sensor;
 import com.hoshblok.SensorAPI.security.JWTUtil;
-import com.hoshblok.SensorAPI.services.PeopleService;
-import com.hoshblok.SensorAPI.services.PersonRegistrationService;
-import com.hoshblok.SensorAPI.services.SensorRegistrationService;
-import com.hoshblok.SensorAPI.services.SensorsService;
-import com.hoshblok.SensorAPI.util.AuthResponse;
-import com.hoshblok.SensorAPI.util.ErrorMessage;
-import com.hoshblok.SensorAPI.util.ErrorResponse;
-import com.hoshblok.SensorAPI.util.SensorErrorResponse;
-import com.hoshblok.SensorAPI.validators.AuthenticationDTOValidator;
-import com.hoshblok.SensorAPI.validators.PersonValidator;
-import com.hoshblok.SensorAPI.validators.SensorDTOValidator;
+import com.hoshblok.SensorAPI.services.interfaces.AuthenticationService;
+import com.hoshblok.SensorAPI.services.interfaces.PersonRegistrationService;
+import com.hoshblok.SensorAPI.services.interfaces.SensorRegistrationService;
+import com.hoshblok.SensorAPI.validators.LoginRequestValidator;
+import com.hoshblok.SensorAPI.validators.PersonRegistrationRequestValidator;
+import com.hoshblok.SensorAPI.validators.SensorRegistrationRequestValidator;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
-	private final PersonValidator personValidator;
-	private final PersonRegistrationService personRegistrationService;
-	private final JWTUtil jwtUtil;
-	private final PeopleService peopleService;
-	private final SensorsService sensorsService;
-	private final AuthenticationManager authenticationManager;
+	private final LoginRequestValidator loginvalidator;
+	private final PersonRegistrationRequestValidator personRegistrationValidator;
+	private final SensorRegistrationRequestValidator sensorRegistrationValidator;
 	private final SensorRegistrationService sensorRegistrationService;
-	private final SensorDTOValidator sensorDTOValidator;
-	private final AuthenticationDTOValidator authenticationDTOValidator;
+	private final PersonRegistrationService personRegistrationService;
+	private final AuthenticationService authenticationService;
+	private final JWTUtil jwtUtil;
 
 	@Autowired
-	public AuthController(PersonValidator personValidator, PersonRegistrationService personRegistrationService,
-		JWTUtil jwtUtil, AuthenticationManager authenticationManager,
-		SensorRegistrationService sensorRegistrationService, SensorDTOValidator sensorDTOValidator,
-		AuthenticationDTOValidator authenticationDTOValidator, PeopleService peopleService, SensorsService sensorsService) {
-		this.personValidator = personValidator;
-		this.personRegistrationService = personRegistrationService;
-		this.jwtUtil = jwtUtil;
-		this.peopleService = peopleService;
-		this.sensorsService = sensorsService;
-		this.authenticationManager = authenticationManager;
+	public AuthController(LoginRequestValidator personLoginvalidator,
+		PersonRegistrationRequestValidator personRegistrationValidator,
+		SensorRegistrationRequestValidator sensorRegistrationValidator,
+		SensorRegistrationService sensorRegistrationService, PersonRegistrationService personRegistrationService,
+		AuthenticationService authenticationService, JWTUtil jwtUtil) {
+		this.loginvalidator = personLoginvalidator;
+		this.personRegistrationValidator = personRegistrationValidator;
+		this.sensorRegistrationValidator = sensorRegistrationValidator;
 		this.sensorRegistrationService = sensorRegistrationService;
-		this.sensorDTOValidator = sensorDTOValidator;
-		this.authenticationDTOValidator = authenticationDTOValidator;
+		this.personRegistrationService = personRegistrationService;
+		this.authenticationService = authenticationService;
+		this.jwtUtil = jwtUtil;
 	}
 
-	@PostMapping("/refresh_token")
-	public ResponseEntity<AuthResponse> refreshToken(@RequestBody @Valid AuthenticationDTO authenticationDTO,
-		BindingResult bindingResult) {
+	@PostMapping("/login")
+	public ResponseEntity<AuthResponse> performPersonLogin(@RequestBody @Valid LoginRequest request,
+		BindingResult bindingResult, HttpServletResponse response) {
 
-		authenticationDTOValidator.validate(authenticationDTO, bindingResult);
+		loginvalidator.validate(request, bindingResult);
 
 		if (bindingResult.hasErrors()) {
-			throw new NotValidAuthenticationDTOException(ErrorMessage.getErrorMessage(bindingResult));
+			throw new NotValidAuthenticationException(ErrorMessage.getErrorMessage(bindingResult));
 		}
 
-		UsernamePasswordAuthenticationToken authInputToken = new UsernamePasswordAuthenticationToken(authenticationDTO
-			.getUsername(), authenticationDTO.getPassword());
+		response.addCookie(authenticationService.getRefreshTokenCookieForLogin(request));
 
-		authenticationManager.authenticate(authInputToken);
+		return new ResponseEntity<>(authenticationService.getAuthResponseForLogin(request), HttpStatus.OK);
+	}
 
-		String token = jwtUtil.generateToken(authenticationDTO.getUsername(), authenticationDTO.getRole());
+	@PostMapping("/refresh_tokens")
+	public ResponseEntity<AuthResponse> refreshTokens(
+		@CookieValue(value = "refreshToken", required = false) String cookieValue, HttpServletResponse response) {
 
-		AuthResponse response = new AuthResponse(token);
+		if (cookieValue == null) {
+			throw new NotValidAuthenticationException("Refresh token cookie is not found. Perfom login!");
+		}
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		if (!jwtUtil.verifyToken(cookieValue)) {
+			throw new NotValidAuthenticationException("Refresh token cookie is not valid. Perfom login!");
+		}
 
+		response.addCookie(authenticationService.getRefreshTokenCookieForRefresh(cookieValue));
+
+		return new ResponseEntity<>(authenticationService.getAuthResponseForRefresh(cookieValue), HttpStatus.OK);
 	}
 
 	@PostMapping("/registration/sensor")
-	public ResponseEntity<AuthResponse> performSensorRegistration(@RequestBody @Valid SensorDTO sensorDTO,
+	public ResponseEntity<HttpStatus> performSensorRegistration(@RequestBody @Valid SensorRegistrationRequest request,
 		BindingResult bindingResult) {
 
-		Sensor sensor = sensorsService.convertToSensor(sensorDTO);
-
-		sensorDTOValidator.validate(sensor, bindingResult);
+		sensorRegistrationValidator.validate(request, bindingResult);
 
 		if (bindingResult.hasErrors()) {
 			throw new NotValidSensorException(ErrorMessage.getErrorMessage(bindingResult));
 		}
 
-		sensorRegistrationService.register(sensor);
+		sensorRegistrationService.register(request);
 
-		String token = jwtUtil.generateToken(sensor.getUsername(), sensor.getRole());
-
-		AuthResponse response = new AuthResponse(token);
-
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return ResponseEntity.ok(HttpStatus.OK);
 	}
 
 	@PostMapping("/registration/person")
-	public ResponseEntity<AuthResponse> performRegistration(@RequestBody @Valid PersonDTO personDTO,
+	public ResponseEntity<HttpStatus> performPersonRegistration(@RequestBody @Valid PersonRegistrationRequest request,
 		BindingResult bindingResult) {
 
-		Person person = peopleService.convertToPerson(personDTO);
-
-		personValidator.validate(person, bindingResult);
+		personRegistrationValidator.validate(request, bindingResult);
 
 		if (bindingResult.hasErrors()) {
 			throw new NotValidPersonException(ErrorMessage.getErrorMessage(bindingResult));
 		}
-		personRegistrationService.register(person);
+		personRegistrationService.register(request);
 
-		String token = jwtUtil.generateToken(person.getUsername(), person.getRole());
-
-		AuthResponse response = new AuthResponse(token);
-
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
-	@ExceptionHandler
-	private ResponseEntity<SensorErrorResponse> handleLoginException(NotValidSensorException ex) {
-
-		SensorErrorResponse response = new SensorErrorResponse(ex.getMessage(), System.currentTimeMillis());
-		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-	}
-
-	@ExceptionHandler
-	private ResponseEntity<SensorErrorResponse> handleCreateException(NotValidAuthenticationDTOException ex) {
-
-		SensorErrorResponse response = new SensorErrorResponse(ex.getMessage(), System.currentTimeMillis());
-		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-	}
-
-	@ExceptionHandler
-	private ResponseEntity<ErrorResponse> handleCreateException(NotValidPersonException ex) {
-
-		ErrorResponse response = new ErrorResponse(ex.getMessage(), System.currentTimeMillis());
-		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-	}
-
-	@ExceptionHandler
-	private ResponseEntity<ErrorResponse> handleLoginException(AuthenticationException ex) {
-
-		ErrorResponse response = new ErrorResponse(ex.getMessage(), System.currentTimeMillis());
-		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		return ResponseEntity.ok(HttpStatus.OK);
 	}
 }

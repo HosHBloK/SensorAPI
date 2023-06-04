@@ -1,0 +1,284 @@
+{
+	"info": {
+		"_postman_id": "9c5f798b-5eac-4fde-9f30-2d29104eccff",
+		"name": "Sensor API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27122452"
+	},
+	"item": [
+		{
+			"name": "Login as person (get JWT tokens)",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\":\"person1\",\r\n    \"password\":\"1234\",\r\n    \"role\":\"person\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login as sensor (get JWT tokens)",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\":\"sensor1\",\r\n    \"password\":\"1234\",\r\n    \"role\":\"sensor\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Refresh_tokens (requires cookie) Copy",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Cookie",
+						"value": "refreshToken=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJKV1QgdG9rZW4iLCJyb2xlIjoic2Vuc29yIiwiaXNzIjoiV2VhdGhlclNlbnNvckFQSSIsImV4cCI6MTY4NTg4MTA1NywiaWF0IjoxNjg1ODczODU3LCJ1c2VybmFtZSI6InNlbnNvcjEifQ.4zjTxhfa39Di5FPHAows9mXHXo82rY-gXf3lKBtltjg; Path=/; Secure; HttpOnly; Expires=Sun, 04 Jun 2023 12:17:37 GMT;",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/auth/refresh_tokens",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"refresh_tokens"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register sensor",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\":\"sensor1\",\r\n    \"password\":\"1234\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/registration/sensor",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"registration",
+						"sensor"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register person",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\":\"person1\",\r\n    \"password\":\"1234\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/registration/person",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"registration",
+						"person"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add measurement",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"value\":\"10\",\r\n    \"raining\":\"true\",\r\n    \"username\":\"sensor1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/measurements/add",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"measurements",
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get measurements",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\":\"sensor1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/measurements/get",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"measurements",
+						"get"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get rainy days count",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\":\"sensor1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/measurements/rainy_days_count",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"measurements",
+						"rainy_days_count"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJKV1QgdG9rZW4iLCJyb2xlIjoicGVyc29uIiwiaXNzIjoiV2VhdGhlclNlbnNvckFQSSIsImV4cCI6MTY4NTg3NzQ0NywiaWF0IjoxNjg1ODczODQ3LCJ1c2VybmFtZSI6InBlcnNvbjEifQ.u6RfQwDR9I1oKfyRbizTtbNeR7B0nqJAkX0p48l82r4",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
